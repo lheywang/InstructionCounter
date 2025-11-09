@@ -10,6 +10,7 @@ BUILD_FOLDER = build
 EXECUTABLE = $(BUILD_FOLDER)/executable.elf
 LOGS = $(BUILD_FOLDER)/trace.log
 DATA = $(BUILD_FOLDER)/data.json
+COMPUTED = $(BUILD_FOLDER)/computed.json
 REPORT_DIR = $(BUILD_FOLDER)/report
 
 
@@ -39,6 +40,9 @@ SIM = qemu-riscv32
 SIM_FLAGS = -d in_asm,exec,nochain\
 		   	-D $(LOGS)
 
+# Formatter
+FORMATTER = black
+
 
 # Note : We call the target makefile, to be always compliant with our needs.
 $(EXECUTABLE): $(BUILD_FOLDER) 
@@ -51,8 +55,11 @@ $(LOGS): $(EXECUTABLE)
 $(DATA): $(LOGS)
 	./tool/parser.py $(LOGS) --output $(DATA)
 
-count: $(DATA)
-	./tool/report.py $(DATA) --output $(REPORT_DIR)
+ $(COMPUTED): $(DATA)
+	./tool/compute.py $(DATA) --output $(COMPUTED)
+
+count: $(COMPUTED) $(REPORT_DIR)
+	./tool/report.py $(COMPUTED) --output $(REPORT_DIR)
 
 clean:
 	rm -f $(LOGS)
@@ -60,5 +67,11 @@ clean:
 	rm -f $(DATA)
 	rm -rf $(REPORT_DIR)
 
+format:
+	$(FORMATTER) tool/
+
 $(BUILD_FOLDER) : 
 	mkdir -p $(BUILD_FOLDER)
+
+$(REPORT_DIR) : 
+	mkdir -p $(REPORT_DIR)
