@@ -205,3 +205,11 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Outputs files
+*.json
+*.log
+*.elf
+
+# Excluding source folder, because it contain the tests files. In reality, we're going to use the right .elf file !
+src/ 
