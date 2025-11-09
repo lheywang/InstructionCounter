@@ -27,22 +27,34 @@ def count_instructions(data: dict) -> dict:
     total_instr = 0
     function_counts = dict()
     instr_counts = dict()
+    functions_instr = dict()
 
     for key in data["calls"].keys():
+
+        name = data["calls"][key]["name"]
 
         # Sum the instructions within the same call
         funct_instr = 0
         for instr in data["blocks"][key].keys():
             funct_instr += data["blocks"][key][instr]
 
+            # Check if we need to initialize some variables
             if instr not in instr_counts.keys():
                 instr_counts[instr] = 0
+
+            if name not in functions_instr.keys():
+                functions_instr[name] = dict()
+
+            if instr not in functions_instr[name].keys():
+                functions_instr[name][instr] = 0
+
+            # Add to the variables
             instr_counts[instr] += data["blocks"][key][instr]
+            functions_instr[name][instr] += data["blocks"][key][instr]
 
         # Ponderate with the right call numbers
         block_instr = funct_instr * data["calls"][key]["count"]
-        name = data["calls"][key]["name"]
-
+        
         # Append for later :
         if name not in function_counts:
             function_counts[name] = 0
@@ -54,7 +66,8 @@ def count_instructions(data: dict) -> dict:
     function_counts = sorted(function_counts.items(), key=lambda x: x[1], reverse=True)
     data["output"]["instructions"] = total_instr
     data["output"]["instructions_counts"] = instr_counts
-    data["output"]["func_calls_instr"] = function_counts
+    data["output"]["func_calls_instr"] = dict(function_counts)
+    data["output"]["func_used_instr"] = functions_instr
     return data
 
 
@@ -102,15 +115,7 @@ def count_cycles(data: dict) -> dict:
     function_counts = sorted(function_counts.items(), key=lambda x: x[1], reverse=True)
     data["output"]["cycles"] = total_cycles
     data["output"]["cycles_count"] = cycles_counts
-    data["output"]["func_calls_cycles"] = function_counts
-    return data
-
-
-def compute_func_level_stats(data: dict) -> dict:
-    """
-    Count the number of instructions, per functions names (named only).
-    Return statistics to identify bottlenecks and so on !
-    """
+    data["output"]["func_calls_cycles"] = dict(function_counts)
     return data
 
 
@@ -118,6 +123,23 @@ def compute_cpi(data: dict) -> dict:
     """
     Compute the global CPI, and the per functions CPI !
     """
+    # Compute the global CPI
+    cpi = data["output"]["cycles"] / data["output"]["instructions"]
+
+    # Create output target
+    func_cpi = dict()
+
+    # Compute the per function CPI : 
+    for func in data["output"]["func_calls_cycles"].keys():
+        func_cpi[func] = data["output"]["func_calls_cycles"][func] / data["output"]["func_calls_instr"][func]
+
+    # Sorting the func cpi list
+    func_cpi = dict(sorted(func_cpi.items(), key=lambda x: x[1], reverse=True))
+
+    # Store outputs
+    data["output"]["cpi"] = cpi
+    data["output"]["func_cpi"] = func_cpi
+        
     return data
 
 
@@ -177,11 +199,8 @@ if __name__ == "__main__":
     data = count_cycles(data)
 
     # Perform more advanced maths :
-    data = compute_func_level_stats(data)
     data = compute_cpi(data)
     data = compute_densities(data)
 
     # Create the output file :
     write_json(output, data["output"])
-
-    print(data["output"])
