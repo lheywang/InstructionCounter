@@ -42,7 +42,7 @@ BGT     = 1     # blt rs2, rs1, label  (pseudo)
 BLEU    = 1     # bgeu rs2, rs1, label (unsigned pseudo)
 BGTU    = 1     # bltu rs2, rs1, label (unsigned pseudo)
 
-[standard]
+[arithmetic]
 
 ADDI    = 1
 SLTI    = 1
@@ -108,7 +108,7 @@ SW      = 2
 FENCE   = 1
 FENCE_I = 1
 
-[CSR]
+[special]
 
 CSRRW   = 1
 CSRRS   = 1
