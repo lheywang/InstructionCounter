@@ -44,10 +44,9 @@ SIM_FLAGS = -d in_asm,exec,nochain\
 FORMATTER = black
 
 
-# Note : We call the target makefile, to be always compliant with our needs.
+# Since the src folder is a symlink from the target, that's actually fine to target the files directy.
 $(EXECUTABLE): $(BUILD_FOLDER) 
 	$(CC) $(RISCV_CFLAGS) -o $(EXECUTABLE) src/fft_int16_main.c src/kissfft_lib/kiss_fft.c -lm
-# 	$(MAKE) ...
 
 $(LOGS): $(EXECUTABLE)
 	$(SIM) $(SIM_FLAGS) $(EXECUTABLE)
